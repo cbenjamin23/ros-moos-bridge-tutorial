@@ -117,10 +117,10 @@ colcon build --packages-select ros_moos_bridge --cmake-args \
 
 ## 8) Run
 
-Terminal A:
+Terminal A, having navigated to your mission folder:
 
 ```bash
-pAntler /path/to/your_mission.moos
+./launch.sh
 ```
 
 Terminal B (no params needed because defaults are already `localhost:9000`):
