@@ -4,14 +4,20 @@ Goal: generate a ROS 2 C++ gateway node from the website, build it, run it again
 
 Website: <https://ros-moos-bridge.base44.app/Home>
 
+## Prerequisites
+
+- Linux system with ROS 2 installed (`humble`, `iron`, or `jazzy`)
+- `colcon` build tool
+- MOOS-IvP installed (headers + `libMOOS`)
+- A MOOS mission you can launch that starts MOOSDB on port `9000`
+
 ## 1) Create a fresh tutorial workspace
 
 ```bash
-export REPO_DIR=~/ros-moos-bridge-tutorial
 mkdir -p ~/ros_moos_gateway_tutorial/ros2_ws/src
 cd ~/ros_moos_gateway_tutorial
-cp "$REPO_DIR/publish_example_odom_once.sh" .
-cp "$REPO_DIR/publish_example_odom.py" .
+cp ~/ros-moos-bridge-tutorial/publish_example_odom_once.sh .
+cp ~/ros-moos-bridge-tutorial/publish_example_odom.py .
 chmod +x ./publish_example_odom_once.sh
 ```
 
@@ -56,7 +62,7 @@ Generate `ros_moos_gateway_example.cpp` using the `minimal nav` package with sta
 If needed, use this repo's reference file:
 
 ```bash
-cp "$REPO_DIR/ros_moos_gateway_example.cpp" \
+cp ~/ros-moos-bridge-tutorial/ros_moos_gateway_example.cpp \
   ~/ros_moos_gateway_tutorial/ros2_ws/src/ros_moos_bridge/src/ros_moos_gateway_example.cpp
 ```
 
@@ -82,7 +88,7 @@ Key changes you should make:
 You can compare your final file to:
 
 ```bash
-$REPO_DIR/tutorial_solution/ros2_ws/src/ros_moos_bridge/CMakeLists.txt
+~/ros-moos-bridge-tutorial/tutorial_solution/ros2_ws/src/ros_moos_bridge/CMakeLists.txt
 ```
 
 ## 6) Manually edit `package.xml` (learning step)
@@ -102,7 +108,7 @@ Make sure it has:
 Reference:
 
 ```bash
-$REPO_DIR/tutorial_solution/ros2_ws/src/ros_moos_bridge/package.xml
+~/ros-moos-bridge-tutorial/tutorial_solution/ros2_ws/src/ros_moos_bridge/package.xml
 ```
 
 ## 7) Build
@@ -171,7 +177,14 @@ Confirm these update:
 
 ## Adapting to other generated mappings
 
-Most build logic stays the same. The part that changes is ROS message dependencies:
+Most build logic stays the same. For new mappings, update these areas:
 
-- Add/remove message packages in `find_package(...)` and `ament_target_dependencies(...)`.
-- Mirror the same packages in `package.xml` as `<depend>...</depend>`.
+- Replace `src/ros_moos_gateway_example.cpp` with the newly generated file.
+- For every ROS message package used by the generated includes (`geometry_msgs`, `sensor_msgs`, `std_msgs`, etc.), add:
+- `find_package(package_name REQUIRED)` in `CMakeLists.txt`.
+- `package_name` in `ament_target_dependencies(...)` in `CMakeLists.txt`.
+- `<depend>package_name</depend>` in `package.xml`.
+- If your bridge no longer consumes `/odom`, update or create test publisher scripts for your new ROS topics and message types.
+- If you changed MOOS host/port defaults in the generated code, launch with matching runtime parameters.
+
+Quick rule: whenever the generated includes change, mirror those message packages in both `CMakeLists.txt` and `package.xml`.

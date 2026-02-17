@@ -1,4 +1,4 @@
-# Tutorial Solution (Known-Good Reference)
+# Tutorial Reference (Known-Good)
 
 This folder contains a complete ROS 2 package that already includes:
 
