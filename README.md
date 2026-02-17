@@ -7,10 +7,11 @@ Website: <https://ros-moos-bridge.base44.app/Home>
 ## 1) Create a fresh tutorial workspace
 
 ```bash
+export REPO_DIR=~/ros-moos-bridge-tutorial
 mkdir -p ~/ros_moos_gateway_tutorial/ros2_ws/src
 cd ~/ros_moos_gateway_tutorial
-cp /Users/charlesbenjamin/ros-moos-bridge-tutorial/publish_example_odom_once.sh .
-cp /Users/charlesbenjamin/ros-moos-bridge-tutorial/publish_example_odom.py .
+cp "$REPO_DIR/publish_example_odom_once.sh" .
+cp "$REPO_DIR/publish_example_odom.py" .
 chmod +x ./publish_example_odom_once.sh
 ```
 
@@ -20,6 +21,13 @@ You only need to run this once when you open a terminal:
 
 ```bash
 source /opt/ros/<your_ros2_distro>/setup.bash
+```
+
+Examples for `<your_ros2_distro>`: `humble`, `iron`, `jazzy`.
+Example command:
+
+```bash
+source /opt/ros/humble/setup.bash
 ```
 
 Use three terminals:
@@ -39,7 +47,7 @@ ros2 pkg create ros_moos_bridge --build-type ament_cmake --dependencies rclcpp n
 
 ## 4) Generate and place gateway C++
 
-Generate `ros_moos_gateway.cpp` using the `minimal nav` package with stale data detection enabled from the website and save it to:
+Generate `ros_moos_gateway_example.cpp` using the `minimal nav` package with stale data detection enabled from the website and save it to:
 
 ```bash
 ~/ros_moos_gateway_tutorial/ros2_ws/src/ros_moos_bridge/src/ros_moos_gateway_example.cpp
@@ -48,7 +56,7 @@ Generate `ros_moos_gateway.cpp` using the `minimal nav` package with stale data 
 If needed, use this repo's reference file:
 
 ```bash
-cp /Users/charlesbenjamin/ros-moos-bridge-tutorial/ros_moos_gateway_example.cpp \
+cp "$REPO_DIR/ros_moos_gateway_example.cpp" \
   ~/ros_moos_gateway_tutorial/ros2_ws/src/ros_moos_bridge/src/ros_moos_gateway_example.cpp
 ```
 
@@ -74,7 +82,7 @@ Key changes you should make:
 You can compare your final file to:
 
 ```bash
-/Users/charlesbenjamin/ros-moos-bridge-tutorial/tutorial_solution/ros2_ws/src/ros_moos_bridge/CMakeLists.txt
+$REPO_DIR/tutorial_solution/ros2_ws/src/ros_moos_bridge/CMakeLists.txt
 ```
 
 ## 6) Manually edit `package.xml` (learning step)
@@ -94,7 +102,7 @@ Make sure it has:
 Reference:
 
 ```bash
-/Users/charlesbenjamin/ros-moos-bridge-tutorial/tutorial_solution/ros2_ws/src/ros_moos_bridge/package.xml
+$REPO_DIR/tutorial_solution/ros2_ws/src/ros_moos_bridge/package.xml
 ```
 
 ## 7) Build
@@ -111,8 +119,8 @@ If MOOS is not found, build with explicit paths (example matching your layout st
 
 ```bash
 colcon build --packages-select ros_moos_bridge --cmake-args \
-  -DMOOS_INCLUDE_DIR=/Users/charlesbenjamin/moos-ivp/MOOS/MOOSCore \
-  -DMOOS_LIBRARY=/Users/charlesbenjamin/moos-ivp/MOOS/MOOSCore/Core/libMOOS/libMOOS.so
+  -DMOOS_INCLUDE_DIR=$HOME/moos-ivp/MOOS/MOOSCore \
+  -DMOOS_LIBRARY=$HOME/moos-ivp/MOOS/MOOSCore/Core/libMOOS/libMOOS.so
 ```
 
 ## 8) Run
