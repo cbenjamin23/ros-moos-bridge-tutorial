@@ -39,7 +39,7 @@ ros2 pkg create ros_moos_bridge --build-type ament_cmake --dependencies rclcpp n
 
 ## 4) Generate and place gateway C++
 
-Generate `ros_moos_gateway.cpp` using the `minimal nav` package from the website and save it to:
+Generate `ros_moos_gateway.cpp` using the `minimal nav` package with stale data detection enabled from the website and save it to:
 
 ```bash
 ~/ros_moos_gateway_tutorial/ros2_ws/src/ros_moos_bridge/src/ros_moos_gateway_example.cpp
