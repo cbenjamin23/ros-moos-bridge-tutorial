@@ -111,8 +111,8 @@ If MOOS is not found, build with explicit paths (example matching your layout st
 
 ```bash
 colcon build --packages-select ros_moos_bridge --cmake-args \
-  -DMOOS_INCLUDE_DIR=/Users/charlesbenjamin/moos-ivp/MOOS_Jul0519/MOOSCore \
-  -DMOOS_LIBRARY=/Users/charlesbenjamin/moos-ivp/MOOS_Jul0519/MOOSCore/Core/libMOOS/libMOOS.so
+  -DMOOS_INCLUDE_DIR=/Users/charlesbenjamin/moos-ivp/MOOS/MOOSCore \
+  -DMOOS_LIBRARY=/Users/charlesbenjamin/moos-ivp/MOOS/MOOSCore/Core/libMOOS/libMOOS.so
 ```
 
 ## 8) Run
