@@ -1,80 +1,99 @@
-# ROS 2 to MOOS Bridge Tutorial
+# ROS 2 to MOOS Bridge Tutorial (Linux)
 
-This repo gives you a complete tutorial for the exact workflow you described:
-
-1. Generate `ros_moos_gateway_example.cpp` from the website.
-2. Create a ROS 2 C++ package.
-3. Paste the generated gateway code into the package.
-4. Fix `CMakeLists.txt` and `package.xml`.
-5. Build and run the node against a MOOSDB on port `9000`.
-6. Inject test `/odom` data with either a one-shot Bash script or a continuous Python publisher.
+This tutorial is for Linux ROS 2 setups (typically Ubuntu + ROS 2 Humble/Iron/Jazzy).
 
 Website: <https://ros-moos-bridge.base44.app/Home>
 
-## Repo Layout
+## What `source /opt/ros/<distro>/setup.bash` does
 
-- `ros_moos_gateway_example.cpp`: reference generated gateway code.
-- `publish_example_odom_once.sh`: one-shot ROS 2 `/odom` publisher.
-- `publish_example_odom.py`: continuous ROS 2 `/odom` publisher.
-- `tutorial/`: manual tutorial scaffold (you still paste your generated C++ file).
-- `tutorial_solution/`: known-good complete package.
+It loads the ROS 2 environment into your current shell:
 
-## Prerequisites
+- Adds ROS 2 tools like `ros2` to your `PATH`.
+- Sets package discovery variables used by build tools and runtime.
+- Makes ROS 2 interfaces and libraries discoverable for `colcon` and your node.
 
-- ROS 2 installed (Humble or newer).
-- `colcon` available.
-- MOOS/MOOS-IvP installed (headers + `libMOOS`).
-- A MOOS mission that starts MOOSDB on port `9000`.
+You need this even if your code is in this repo because ROS 2 itself is installed system-wide under `/opt/ros/...`.
 
-## Manual Tutorial (Primary Path)
+## What is constant vs variable in `CMakeLists.txt` / `package.xml`
 
-### 1) Create a ROS 2 workspace and package
+The following pattern is consistent across generated ROS2->MOOS gateway nodes:
+
+- Always use `ament_cmake`.
+- Always depend on `rclcpp`.
+- Always build one executable from your generated `.cpp`.
+- Always find/include/link MOOS (`MOOSCommClient.h` + `libMOOS`).
+- Always install the executable with `install(TARGETS ...)`.
+
+What changes with message types/topic mappings:
+
+- ROS message package dependencies (for example `nav_msgs`, `geometry_msgs`, `sensor_msgs`).
+- Those dependencies must be updated in both:
+  - `CMakeLists.txt` (`find_package(...)` and `ament_target_dependencies(...)`)
+  - `package.xml` (`<depend>...</depend>`)
+
+For this tutorial's generated file, `/odom` uses `nav_msgs/msg/Odometry`, so `nav_msgs` is included.
+
+## From-Scratch Tutorial (Exact Flow)
+
+### 0) Create a fresh tutorial folder and workspace
+
+You can place this folder anywhere. `~/ros_moos_gateway_tutorial` is just an example path.
+
+```bash
+mkdir -p ~/ros_moos_gateway_tutorial/ros2_ws/src
+cd ~/ros_moos_gateway_tutorial
+```
+
+### 1) Prepare helper test publishers in your tutorial folder
+
+```bash
+cp /Users/charlesbenjamin/ros-moos-bridge-tutorial/publish_example_odom_once.sh ~/ros_moos_gateway_tutorial/
+cp /Users/charlesbenjamin/ros-moos-bridge-tutorial/publish_example_odom.py ~/ros_moos_gateway_tutorial/
+chmod +x ~/ros_moos_gateway_tutorial/publish_example_odom_once.sh
+```
+
+### 2) Create the ROS 2 package from scratch
 
 ```bash
 source /opt/ros/<your_ros2_distro>/setup.bash
-mkdir -p ~/ros2_ws/src
-cd ~/ros2_ws/src
+cd ~/ros_moos_gateway_tutorial/ros2_ws/src
 ros2 pkg create ros_moos_bridge --build-type ament_cmake --dependencies rclcpp nav_msgs
 ```
 
-### 2) Generate and paste the gateway C++ from the website
+### 3) Generate your gateway C++ on the website and paste it
 
-Use the generator and produce `ros_moos_gateway_example.cpp`.
-
-Place it here:
+Generate `ros_moos_gateway_example.cpp`, then place it at:
 
 ```bash
-~/ros2_ws/src/ros_moos_bridge/src/ros_moos_gateway_example.cpp
+~/ros_moos_gateway_tutorial/ros2_ws/src/ros_moos_bridge/src/ros_moos_gateway_example.cpp
 ```
 
-If you want to use the reference file from this repo:
+If you want to use this repo's reference generated file:
 
 ```bash
 cp /Users/charlesbenjamin/ros-moos-bridge-tutorial/ros_moos_gateway_example.cpp \
-  ~/ros2_ws/src/ros_moos_bridge/src/ros_moos_gateway_example.cpp
+  ~/ros_moos_gateway_tutorial/ros2_ws/src/ros_moos_bridge/src/ros_moos_gateway_example.cpp
 ```
 
-### 3) Replace `CMakeLists.txt` and `package.xml`
-
-Use the prepared tutorial versions:
+### 4) Replace `CMakeLists.txt` and `package.xml` with tutorial templates
 
 ```bash
 cp /Users/charlesbenjamin/ros-moos-bridge-tutorial/tutorial/ros2_ws/src/ros_moos_bridge/CMakeLists.txt \
-  ~/ros2_ws/src/ros_moos_bridge/CMakeLists.txt
+  ~/ros_moos_gateway_tutorial/ros2_ws/src/ros_moos_bridge/CMakeLists.txt
 
 cp /Users/charlesbenjamin/ros-moos-bridge-tutorial/tutorial/ros2_ws/src/ros_moos_bridge/package.xml \
-  ~/ros2_ws/src/ros_moos_bridge/package.xml
+  ~/ros_moos_gateway_tutorial/ros2_ws/src/ros_moos_bridge/package.xml
 ```
 
-### 4) Build the package
+### 5) Build
 
 ```bash
-cd ~/ros2_ws
 source /opt/ros/<your_ros2_distro>/setup.bash
+cd ~/ros_moos_gateway_tutorial/ros2_ws
 colcon build --packages-select ros_moos_bridge
 ```
 
-If MOOS is not in a default include/lib location, build with explicit paths:
+If MOOS is not in default Linux paths, pass explicit paths:
 
 ```bash
 colcon build --packages-select ros_moos_bridge --cmake-args \
@@ -82,54 +101,46 @@ colcon build --packages-select ros_moos_bridge --cmake-args \
   -DMOOS_LIBRARY=/path/to/libMOOS.so
 ```
 
-On macOS, use the same build command with a `.dylib`, for example:
+### 6) Run MOOSDB first, then the ROS 2 gateway
 
-```bash
-colcon build --packages-select ros_moos_bridge --cmake-args \
-  -DMOOS_INCLUDE_DIR=/usr/local/include \
-  -DMOOS_LIBRARY=/usr/local/lib/libMOOS.dylib
-```
-
-### 5) Run MOOS and the ROS 2 gateway node
-
-Terminal A (MOOS mission; must expose MOOSDB on `9000`):
+Terminal A:
 
 ```bash
 pAntler /path/to/your_mission.moos
 ```
 
-Terminal B (ROS 2 gateway):
+Terminal B:
 
 ```bash
 source /opt/ros/<your_ros2_distro>/setup.bash
-source ~/ros2_ws/install/setup.bash
+source ~/ros_moos_gateway_tutorial/ros2_ws/install/setup.bash
 ros2 run ros_moos_bridge ros_moos_gateway_example --ros-args \
   -p moos_host:=localhost \
   -p moos_port:=9000 \
   -p moos_name:=ROS_MOOS_Gateway
 ```
 
-### 6) Inject ROS 2 odometry data
+### 7) Inject `/odom` data (pick one)
 
-Terminal C (option 1: publish once):
-
-```bash
-source /opt/ros/<your_ros2_distro>/setup.bash
-source ~/ros2_ws/install/setup.bash
-/Users/charlesbenjamin/ros-moos-bridge-tutorial/publish_example_odom_once.sh
-```
-
-Terminal C (option 2: publish continuously at 10 Hz):
+Terminal C, publish once:
 
 ```bash
 source /opt/ros/<your_ros2_distro>/setup.bash
-source ~/ros2_ws/install/setup.bash
-python3 /Users/charlesbenjamin/ros-moos-bridge-tutorial/publish_example_odom.py
+source ~/ros_moos_gateway_tutorial/ros2_ws/install/setup.bash
+~/ros_moos_gateway_tutorial/publish_example_odom_once.sh
 ```
 
-### 7) Verify expected MOOS variables
+Terminal C, publish continuously:
 
-With your MOOS monitoring tools, verify updates for:
+```bash
+source /opt/ros/<your_ros2_distro>/setup.bash
+source ~/ros_moos_gateway_tutorial/ros2_ws/install/setup.bash
+python3 ~/ros_moos_gateway_tutorial/publish_example_odom.py
+```
+
+### 8) Verify on MOOS side
+
+Check that these variables update:
 
 - `NAV_X`
 - `NAV_Y`
@@ -137,24 +148,24 @@ With your MOOS monitoring tools, verify updates for:
 - `NAV_SPEED`
 - `ODOM_STALE`
 
-## Tutorial Solution Folder (Fallback / Diff Target)
+## Fallback: Known-Good Solution Package
 
-If your manual package setup fails, copy the known-good solution package:
+If your manual package fails, copy the reference solution package:
 
 ```bash
-mkdir -p ~/ros2_ws/src
+mkdir -p ~/ros_moos_gateway_tutorial/ros2_ws/src
 cp -R /Users/charlesbenjamin/ros-moos-bridge-tutorial/tutorial_solution/ros2_ws/src/ros_moos_bridge \
-  ~/ros2_ws/src/
+  ~/ros_moos_gateway_tutorial/ros2_ws/src/
 ```
 
-Then build/run with the same commands from steps 4-6.
+Then build/run using Steps 5-7 above.
 
 ## Troubleshooting
 
-- Build fails with `MOOS/libMOOS/Comms/MOOSCommClient.h` not found:
-  - Set `MOOS_INCLUDE_DIR` explicitly in `colcon build --cmake-args`.
-- Linker fails with `MOOS` not found:
-  - Set `MOOS_LIBRARY` explicitly to full path of `libMOOS.so`/`libMOOS.dylib`.
-- Gateway runs but no MOOS updates:
-  - Confirm MOOSDB is actually on `localhost:9000`.
-  - Confirm you are publishing `nav_msgs/msg/Odometry` on `/odom`.
+- `MOOSCommClient.h` not found:
+  - Build with `-DMOOS_INCLUDE_DIR=...`.
+- `libMOOS.so` not found at link time:
+  - Build with `-DMOOS_LIBRARY=...`.
+- Gateway starts but no MOOS updates:
+  - Confirm MOOSDB is running on `localhost:9000`.
+  - Confirm `/odom` messages exist: `ros2 topic echo /odom`.

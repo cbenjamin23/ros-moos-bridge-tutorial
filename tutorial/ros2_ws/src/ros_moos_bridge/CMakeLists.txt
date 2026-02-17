@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+# Add one find_package(...) per ROS interface package used by your generated .cpp.
+# This tutorial example maps /odom (nav_msgs/msg/Odometry), so nav_msgs is required.
 find_package(nav_msgs REQUIRED)
 
 # MOOS is not a ROS package, so find it via headers/libs on your system.
@@ -40,6 +42,7 @@ if(NOT MOOS_LIBRARY)
 endif()
 
 add_executable(ros_moos_gateway_example src/ros_moos_gateway_example.cpp)
+# Keep rclcpp + message packages aligned with the generated source includes.
 ament_target_dependencies(ros_moos_gateway_example rclcpp nav_msgs)
 target_include_directories(ros_moos_gateway_example PRIVATE ${MOOS_INCLUDE_DIR})
 target_link_libraries(ros_moos_gateway_example ${MOOS_LIBRARY})

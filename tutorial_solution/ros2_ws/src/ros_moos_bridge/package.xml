@@ -9,6 +9,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <!-- Keep these message package dependencies aligned with generated C++ includes. -->
   <depend>rclcpp</depend>
   <depend>nav_msgs</depend>
 
