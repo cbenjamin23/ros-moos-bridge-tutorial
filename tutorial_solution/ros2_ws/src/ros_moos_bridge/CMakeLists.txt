@@ -21,6 +21,7 @@ find_path(MOOS_INCLUDE_DIR
   NAMES MOOS/libMOOS/Comms/MOOSCommClient.h
   HINTS
     $ENV{MOOS_INCLUDE_DIR}
+    $ENV{HOME}/moos-ivp/MOOS_Jul0519/MOOSCore
     /usr/local/include
     /usr/include
 )
@@ -29,6 +30,7 @@ find_library(MOOS_LIBRARY
   NAMES MOOS
   HINTS
     $ENV{MOOS_LIBRARY_DIR}
+    $ENV{HOME}/moos-ivp/MOOS_Jul0519/MOOSCore/Core/libMOOS
     /usr/local/lib
     /usr/lib
 )
